@@ -53,11 +53,56 @@ const LoginAndSignup = (props) => {
     setIsLoading(false)
   }
 
+  const login = (email, password) => {
+    console.log(email + '                                 ' + password)
+    if (email != '' && password != '') {
+      fetch('http://10.0.2.2:3333/api/1.0.0/user/login', {
+        method: 'post',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password
+        })
+      })
+        .then(response => response.json())
+        .then(async res => {
+          console.log(res)
+          await AsyncStorage.setItem('token', res.token)
+          props.navigation.replace('BottomTab')
+        })
+        .catch(error => console.log(error))
+    }
+  }
+
   const createAccount = () => {
     console.log(emailSignup + passwordSignup + passwordConfirm + firstName + lastName)
     if (emailSignup !== '' && passwordSignup !== '' && passwordConfirm !== '' && firstName !== '' && lastName !== '') {
       if (passwordSignup === passwordConfirm) {
-        props.navigation.replace('BottomTab')
+        fetch ('http://10.0.2.2:3333/api/1.0.0/user', {
+          method: 'post',
+          headers: {
+            Accept: 'application/json',
+            'content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            first_name: firstName,
+            last_name: lastName,
+            email: emailSignup,
+            password: passwordSignup
+          })
+        })
+          .then(response => {
+            console.log(response)
+            if (response.ok === true) {
+              login(emailSignup, passwordSignup)
+            } else {
+              ToastAndroid.show('Something went wrong', ToastAndroid.SHORT, ['UIAlertController'])
+              setIsLoading(false)
+            }
+          })
+          .catch(res => console.log(res))
         setIsLoading(false)
       } else {
         ToastAndroid.show('Passwords must be same', ToastAndroid.SHORT, ['UIAlertController'])
@@ -227,7 +272,7 @@ const LoginAndSignup = (props) => {
                   <TextInput
                     onSubmitEditing={() => {
                       setIsLoading(true)
-                      onLoginClick(email, password)
+                      login(email, password)
                     }}
                     secureTextEntry={secure}
                     style={{
@@ -291,22 +336,22 @@ const LoginAndSignup = (props) => {
                     }}
                     onPress={() => {
                       setIsLoading(true)
-                      onLoginClick(email, password)
+                      login(email, password)
                     }}
                   >
                     {
-                    isLoading
-                      ? <ActivityIndicator color='white' size={20} />
-                      : <Text
-                          style={{
-                            fontSize: 16,
-                            color: 'white',
-                            alignSelf: 'center'
-                          }}
-                        >
-                        Login
-                      </Text>
-                  }
+                      isLoading
+                        ? <ActivityIndicator color='white' size={20} />
+                        : <Text
+                            style={{
+                              fontSize: 16,
+                              color: 'white',
+                              alignSelf: 'center'
+                            }}
+                          >
+                          Login
+                        </Text>
+                    }
                   </TouchableOpacity>
                 </View>
               </View>
@@ -457,19 +502,19 @@ const LoginAndSignup = (props) => {
                     </TouchableOpacity>
                   </View>
                   {
-                InvalidPassword
-                  ? (
-                    <Text
-                      style={{
-                        color: 'red',
-                        fontSize: 12,
-                        paddingVertical: 5
-                      }}
-                    >
-                      Password at least 6 char long and have at least one non alphanumeric character , one digit ('0'-'9'), one uppercase ('A'-'Z') and one lowercase ('a'-'z').
-                    </Text>
-                    ) : null
-}
+                  InvalidPassword
+                    ? (
+                      <Text
+                        style={{
+                          color: 'red',
+                          fontSize: 12,
+                          paddingVertical: 5
+                        }}
+                      >
+                        Password at least 6 char long and have at least one non alphanumeric character , one digit ('0'-'9'), one uppercase ('A'-'Z') and one lowercase ('a'-'z').
+                      </Text>
+                      ) : null
+                }
 
                   <Text
                     style={{

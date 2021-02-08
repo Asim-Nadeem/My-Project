@@ -12,7 +12,6 @@ import {
   ActivityIndicator,
   ToastAndroid
 } from 'react-native'
-import { launchCamera, launchImageLibrary } from 'react-native-image-picker'
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -28,41 +27,27 @@ const UpdateAccount = () => {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
 
-  const imageUpload = () => {
-    const options = {
-      title: 'Select Image',
-
-      storageOptions: {
-        skipBackup: true,
-        path: 'images'
-      }
-    }
-    launchImageLibrary(options, (response) => {
-      if (response.didCancel) {
-        alert('Cancelled Image')
-      } else if (response.error) {
-        alert('Error : ', response.error)
-      } else {
-        setAvatarSource(response)
-      }
+  const updateProfile = () => {
+    fetch('',{
+      method : ''
     })
-  }
+  } show me in postman
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerview}>
-        <View style={styles.view}>
+      {/* <View style={styles.headerview}> */}
+        {/* <View style={styles.view}>
           <TouchableOpacity onPress={() => { this.props.navigation.goBack() }}>
             <Image
               style={{ height: 40, width: 40 }}
               source={require('./icon-back.png')}
             />
           </TouchableOpacity>
-        </View>
-      </View>
+        </View> */}
+      {/* </View> */}
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={{ paddingHorizontal: 15 }}>
-          <View style={{ height: hp(17), justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ paddingHorizontal: 15, marginTop : 30}}>
+          {/* <View style={{ height: hp(17), justifyContent: 'center', alignItems: 'center' }}>
             <TouchableOpacity onPress={() => imageUpload()}>
               {
                             avatarSource === ''
@@ -70,7 +55,7 @@ const UpdateAccount = () => {
                               : <Image source={avatarSource} style={{ height: hp(15), width: hp(15), borderRadius: hp(20 / 2) }} />
                         }
             </TouchableOpacity>
-          </View>
+          </View> */}
           <View style={{ borderBottomWidth: 1, borderBottomColor: '#ECECEC' }}>
             <Text style={{ color: 'grey', fontSize: 12, marginTop: 10 }}>
               First Name

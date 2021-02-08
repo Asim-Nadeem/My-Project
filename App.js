@@ -10,6 +10,7 @@ import CreateReviewScreen from './components/createReviews'
 import MyReviewScreen from './components/MyReviews'
 import LogoutScreen from './components/Logout'
 import LoginAndSignup from './components/LoginAndSignup'
+import UpdateProfile from './components/updateProfile'
 // import { create } from 'react-test-renderer'
 
 const Tab = createBottomTabNavigator()
@@ -97,6 +98,10 @@ const MainStack = () => {
         <AuthStack.Screen
           name='BottomTab'
           component={myApp}
+        />
+        <AuthStack.Screen
+          name='UpdateProfile'
+          component={UpdateProfile}
         />
       </AuthStack.Navigator>
     </NavigationContainer>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   View,
   TextInput,
@@ -37,6 +37,16 @@ const LoginAndSignup = (props) => {
   const [passFocus, setPassFocus] = useState(false)
   const [lastName, setLastName] = useState('')
 
+  // useEffect( ()=> {
+  //   async function tokenData() {
+  //     let token = await AsyncStorage.getItem('token')
+  //     if (token) {
+  //       props.navigation.replace('BottomTab')
+  //     }
+  //   }
+  //   tokenData()
+  // })
+
   const onLoginClick = (email, password) => {
     if (password === '') {
       ToastAndroid.show('Password is empty', ToastAndroid.SHORT, ['UIAlertController'])
@@ -70,6 +80,7 @@ const LoginAndSignup = (props) => {
         .then(async res => {
           console.log(res)
           await AsyncStorage.setItem('token', res.token)
+          await AsyncStorage.setItem('userID', JSON.stringify(res.id))
           props.navigation.replace('BottomTab')
         })
         .catch(error => console.log(error))

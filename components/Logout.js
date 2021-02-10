@@ -1,35 +1,40 @@
 import AsyncStorage from '@react-native-community/async-storage'
-import React, { Component, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
-  Platform,
   StyleSheet,
   Text,
   View,
-  TextInput,
   ScrollView,
   Image,
   TouchableOpacity,
-  FlatList,
   ActivityIndicator,
-  ToastAndroid
 } from 'react-native'
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
-  listenOrientationChange as loc,
-  removeOrientationListener as rol
+  // listenOrientationChange as loc,
+  // removeOrientationListener as rol
 } from 'react-native-responsive-screen'
 import { useFocusEffect } from '@react-navigation/native'
 
 const UserAccount = (props) => {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [loader, setLoader] = useState(true)
+  // const [name, setName] = useState('')
+  // const [email, setEmail] = useState('')
+  const [loader, setLoader] = useState(false)
   const [profileData, setProfileData] = useState({})
 
   useEffect(() => {
-    getUserData()
+    setTimeout(() => {
+      getUserData()
+    }, 2000)
   }, [])
+
+  useFocusEffect(
+    React.useCallback(() => {
+      setLoader(true)
+      getUserData()
+    }, [])
+  )
 
   const getUserData = async () => {
     const user_id = await AsyncStorage.getItem('userID')
@@ -47,7 +52,10 @@ const UserAccount = (props) => {
         setProfileData(response)
         setLoader(false)
       })
-      .catch(err => console.log(err))
+      .catch(err => {
+        console.log(err)
+        setLoader(false)
+      })
   }
 
   const logout = async () => {
@@ -64,13 +72,13 @@ const UserAccount = (props) => {
         console.log(response)
         if (response.status === 200) {
           await AsyncStorage.removeItem('token')
-          props.navigation.replace('LoginAndSignup')
+          props.navigation.navigate('LoginAndSignup')
         }
       })
       .catch(err => console.log(err))
   }
 
-  if (loader === true) {
+  if (loader) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size={30} color='red' />
@@ -112,7 +120,7 @@ const UserAccount = (props) => {
               </Text>
             </View>
           </View>
-          <TouchableOpacity onPress={() => props.navigation.navigate('UpdateProfile')} style={{ width: wp(95), paddingVertical: 15, backgroundColor: 'red', alignItems: 'center', justifyContent: 'center', alignSelf: 'center', borderRadius: 10, marginTop: hp(10) }}>
+          <TouchableOpacity onPress={() => { props.navigation.navigate('UpdateProfile', { profile: profileData }); setLoader(true) }} style={{ width: wp(95), paddingVertical: 15, backgroundColor: 'red', alignItems: 'center', justifyContent: 'center', alignSelf: 'center', borderRadius: 10, marginTop: hp(10) }}>
             <Text style={{ fontSize: 15, color: '#FFF', fontWeight: 'bold' }}>Edit Profile</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => logout()} style={{ width: wp(95), paddingVertical: 15, backgroundColor: 'red', alignItems: 'center', justifyContent: 'center', alignSelf: 'center', borderRadius: 10, marginTop: hp(2) }}>

@@ -6,8 +6,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { createStackNavigator } from '@react-navigation/stack'
 import HomeScreen from './components/home'
 import ReviewScreen from './components/reviews'
-import CreateReviewScreen from './components/createReviews'
-import MyReviewScreen from './components/MyReviews'
+import LocationScreen from './components/Location'
 import LogoutScreen from './components/Logout'
 import LoginAndSignup from './components/LoginAndSignup'
 import UpdateProfile from './components/updateProfile'
@@ -42,25 +41,13 @@ const myApp = () => {
         }}
       />
       <Tab.Screen
-        name='Create Reviews'
-        component={CreateReviewScreen}
-        options={{
-          tabBarLabel: 'Creat Review',
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons
-              name='plus-thick' color={color} size={26}
-            />
-          )
-        }}
-      />
-      <Tab.Screen
         name='My Reviews'
-        component={MyReviewScreen}
+        component={LocationScreen}
         options={{
-          tabBarLabel: 'My Reviews',
+          tabBarLabel: 'Location',
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
-              name='book' color={color} size={26}
+              name='google-maps' color={color} size={26}
             />
           )
         }}

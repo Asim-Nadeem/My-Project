@@ -37,15 +37,15 @@ const LoginAndSignup = (props) => {
   const [passFocus, setPassFocus] = useState(false)
   const [lastName, setLastName] = useState('')
 
-  // useEffect( ()=> {
-  //   async function tokenData() {
-  //     let token = await AsyncStorage.getItem('token')
-  //     if (token) {
-  //       props.navigation.replace('BottomTab')
-  //     }
-  //   }
-  //   tokenData()
-  // })
+  useEffect(() => {
+    async function tokenData () {
+      const token = await AsyncStorage.getItem('token')
+      if (token) {
+        props.navigation.replace('BottomTab')
+      }
+    }
+    tokenData()
+  }, [])
 
   const onLoginClick = (email, password) => {
     if (password === '') {

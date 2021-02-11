@@ -7,11 +7,11 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
-  ActivityIndicator,
+  ActivityIndicator
 } from 'react-native'
 import {
   widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
+  heightPercentageToDP as hp
   // listenOrientationChange as loc,
   // removeOrientationListener as rol
 } from 'react-native-responsive-screen'

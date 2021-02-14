@@ -44,7 +44,7 @@ const myApp = () => {
         name='My Reviews'
         component={LocationScreen}
         options={{
-          tabBarLabel: 'Location',
+          tabBarLabel: 'Favourtie Location',
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
               name='google-maps' color={color} size={26}

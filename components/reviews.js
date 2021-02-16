@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { StyleSheet, View, Text, FlatList, Image } from 'react-native'
-import { TouchableOpacity } from 'react-native-gesture-handler'
+import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity, TextInput, ToastAndroid } from 'react-native'
 import Modal from 'react-native-modal'
 import { Rating, AirbnbRating } from 'react-native-ratings'
 import { color } from 'react-native-reanimated'
@@ -12,6 +11,12 @@ const reviews = ({ navigation }) => {
   const [like, setLike] = useState(false)
   const [showReview, setShowReview] = useState(false)
   const [typeModalVisible, setTypeModalVisible] = useState(false)
+  const [quality_rating, setQualityRating] = useState(0)
+  const [clenliness_rating, setCleanlinessRating] = useState(0)
+  const [price_rating, setProceRating] = useState(0)
+  const [overall_rating, setOverAllRating] = useState(0)
+  const [review_body, setReiewBody] = useState('')
+  const [locID, setLocationID] = useState(0)
 
   useEffect(() => {
     getUserData()
@@ -22,8 +27,19 @@ const reviews = ({ navigation }) => {
     return unsubscribe
   }, [navigation])
 
-  const ratingCompleted = (rating) => {
+  const overAllRating = (rating) => {
+    setOverAllRating(rating)
+  }
+  const priceRating = (rating) => {
     console.log('Rating is: ' + rating)
+  }
+  const qualityRating = (rating) => {
+    console.log('Quality Rating is: ' + rating)
+    setQualityRating(rating)
+  }
+  const cleanlinessRating = (rating) => {
+    console.log('Cleanliness Rating is: ' + rating)
+    setCleanlinessRating(rating)
   }
 
   const Posts = async (liked) => {
@@ -133,6 +149,33 @@ const reviews = ({ navigation }) => {
     setLocations(a)
   }
 
+  const addReview = async () => {
+    const token = await AsyncStorage.getItem('token')
+    const data = JSON.stringify({
+      overall_rating: overall_rating,
+      price_rating: price_rating,
+      quality_rating: quality_rating,
+      clenliness_rating: clenliness_rating,
+      review_body: review_body
+    })
+    console.log(data)
+    fetch('http://10.0.2.2:3333/api/1.0.0/location/' + locID + '/review', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Authorization': token
+      },
+      body: data
+    })
+      .then(response => {
+        console.log(response)
+        setTypeModalVisible(false)
+        getUserData()
+        ToastAndroid.show('Review added', ToastAndroid.SHORT, ['UIAlertController'])
+      })
+      .catch(eror => console.log(eror))
+  }
+
   return (
     <View style={styles.MainView}>
       <Modal
@@ -149,15 +192,49 @@ const reviews = ({ navigation }) => {
       >
         <View style={styles.modalContainer1}>
           <View style={{ paddingHorizontal: 15 }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Review this post</Text>
-            <View style={{ paddingVertical: 15 }}>
+            <View style={{ paddingTop: 15 }}>
+              <Text style={{ fontSize: 15, fontWeight: 'bold' }}>Overall Rating</Text>
               <Rating
                 type='star'
                 ratingCount={5}
-                imageSize={45}
+                imageSize={30}
                 showRating
-                onFinishRating={ratingCompleted}
+                onFinishRating={overAllRating}
               />
+            </View>
+            <View style={{ paddingVertical: 15 }}>
+              <Text style={{ fontSize: 15, fontWeight: 'bold' }}>Price Rating</Text>
+              <Rating
+                type='star'
+                ratingCount={5}
+                imageSize={30}
+                showRating
+                onFinishRating={priceRating}
+              />
+            </View>
+            <View style={{ paddingVertical: 15 }}>
+              <Text style={{ fontSize: 15, fontWeight: 'bold' }}>Quality Rating</Text>
+              <Rating
+                type='star'
+                ratingCount={5}
+                imageSize={30}
+                showRating
+                onFinishRating={qualityRating}
+              />
+            </View>
+            <View style={{ paddingVertical: 15 }}>
+              <Text style={{ fontSize: 15, fontWeight: 'bold' }}>Claenliness Rating</Text>
+              <Rating
+                type='star'
+                ratingCount={5}
+                imageSize={30}
+                showRating
+                onFinishRating={cleanlinessRating}
+              />
+            </View>
+            <View style={{ paddingVertical: 15 }}>
+              <Text style={{ fontSize: 15, fontWeight: 'bold' }}>Review The Place</Text>
+              <TextInput placeholder='Type here...' onChangeText={val => setReiewBody(val)} style={{ fontSize: 16, color: 'black' }} />
             </View>
             <View style={styles.btnContainer}>
               <TouchableOpacity
@@ -177,9 +254,7 @@ const reviews = ({ navigation }) => {
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={() => {
-                  setTypeModalVisible(false)
-                }}
+                onPress={() => addReview(locID)}
                 style={styles.doneBtn}
               >
                 <Text
@@ -201,7 +276,8 @@ const reviews = ({ navigation }) => {
       <FlatList
         data={Locations}
         renderItem={({ item, index }) => (
-          <View
+          <TouchableOpacity
+            onPress={() => navigation.navigate('PostDetails', { data: item })}
             style={{
               backgroundColor: '#FFFFFF',
               borderRadius: 10,
@@ -215,11 +291,11 @@ const reviews = ({ navigation }) => {
               <TouchableOpacity onPress={() => likeLoation(item.location_id, item.favorite, item, index)}>
                 <Icon name='heart' color={item.favorite ? 'red' : 'grey'} size={25} />
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => setTypeModalVisible(true)}>
+              <TouchableOpacity onPress={() => { setLocationID(item.location_id), setTypeModalVisible(true) }}>
                 <Text style={{ fontSize: 18 }}>Review</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
       />
     </View>

@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react'
 import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity, TextInput, ToastAndroid } from 'react-native'
 import Modal from 'react-native-modal'
 import { Rating, AirbnbRating } from 'react-native-ratings'
-import { color } from 'react-native-reanimated'
 import Icon from 'react-native-vector-icons/AntDesign'
 import AsyncStorage from '@react-native-community/async-storage'
+import {launchCamera} from 'react-native-image-picker'
+import { ScrollView } from 'react-native-gesture-handler'
+import { ActivityIndicator } from 'react-native-paper'
 
 const reviews = ({ navigation }) => {
   const [Locations, setLocations] = useState([])
@@ -17,6 +19,10 @@ const reviews = ({ navigation }) => {
   const [overall_rating, setOverAllRating] = useState(0)
   const [review_body, setReiewBody] = useState('')
   const [locID, setLocationID] = useState(0)
+  const [avatarSource, setAvatarSource] = useState('')
+  const [imageLoader, setImageLoader] = useState(false)
+
+
 
   useEffect(() => {
     getUserData()
@@ -26,6 +32,31 @@ const reviews = ({ navigation }) => {
 
     return unsubscribe
   }, [navigation])
+
+  const imageUpload = () =>{
+    let options = {
+      title: 'Select Image',
+      storageOptions: {
+        skipBackup: true,
+        path: 'images',
+      },
+    };
+    launchCamera(options, (response) =>{
+      if (response.didCancel) {
+        console.log('Cancelled Image')
+      } else if (response.error) {
+        alert('Error : ', response.error)
+      }
+       else {
+        console.log(response)
+        setImageLoader(true)
+        setAvatarSource(response)
+        setTimeout(() => {
+          setImageLoader(false)
+        }, 3000)
+      }
+    })
+  }
 
   const overAllRating = (rating) => {
     setOverAllRating(rating)
@@ -93,7 +124,7 @@ const reviews = ({ navigation }) => {
       .catch(error => console.log(error))
   }
 
-  const getUserData = async () => {
+  const getUserData = async (review_Body) => {
     const user_id = await AsyncStorage.getItem('userID')
     const token = await AsyncStorage.getItem('token')
     fetch('http://10.0.2.2:3333/api/1.0.0/user/' + user_id, {
@@ -107,6 +138,13 @@ const reviews = ({ navigation }) => {
       .then(response => {
         console.log(response)
         Posts(response.favourite_locations)
+        if (avatarSource != {}) {
+          response.reviews.map((data, index) => {
+           if  (data.review.review_body == review_Body) {
+            addPhoto(data.review.review_id)
+           }
+          })
+        }
       })
       .catch(err => {
         console.log(err)
@@ -170,6 +208,25 @@ const reviews = ({ navigation }) => {
       .then(response => {
         console.log(response)
         setTypeModalVisible(false)
+        getUserData(review_body)
+        ToastAndroid.show('Review added', ToastAndroid.SHORT, ['UIAlertController'])
+      })
+      .catch(eror => console.log(eror))
+  }
+
+  const addPhoto = (reviewID) => {
+    // alert(reviewID +"           "+locID)
+    fetch('http://10.0.2.2:3333/api/1.0.0/location/' + locID + '/review/'+reviewID+'/photo', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'image/jpeg',
+        'X-Authorization': token
+      },
+      body: avatarSource
+    })
+      .then(response => {
+        console.log(response)
+        setTypeModalVisible(false)
         getUserData()
         ToastAndroid.show('Review added', ToastAndroid.SHORT, ['UIAlertController'])
       })
@@ -191,7 +248,17 @@ const reviews = ({ navigation }) => {
         }}
       >
         <View style={styles.modalContainer1}>
+          <ScrollView>
           <View style={{ paddingHorizontal: 15 }}>
+            {/* {
+              imageLoader ?
+              <ActivityIndicator size={30} color={'red'} />
+              :
+              avatarSource == {} ?
+              <Image style={{height : 150, width : '100%'}} source={avatarSource} ></Image>
+              :
+              null
+            } */}
             <View style={{ paddingTop: 15 }}>
               <Text style={{ fontSize: 15, fontWeight: 'bold' }}>Overall Rating</Text>
               <Rating
@@ -236,6 +303,9 @@ const reviews = ({ navigation }) => {
               <Text style={{ fontSize: 15, fontWeight: 'bold' }}>Review The Place</Text>
               <TextInput placeholder='Type here...' onChangeText={val => setReiewBody(val)} style={{ fontSize: 16, color: 'black' }} />
             </View>
+            <TouchableOpacity onPress={()=>imageUpload()} style={{borderWidth : 1, borderColor : 'red', width : '100%', paddingVertical : 10}} >
+              <Text style={{fontSize : 18, fontWeight : 'bold', textAlign : 'center', color : 'red'}} >Add Photo</Text>
+            </TouchableOpacity>
             <View style={styles.btnContainer}>
               <TouchableOpacity
                 style={styles.cancelBtn}
@@ -268,6 +338,7 @@ const reviews = ({ navigation }) => {
               </TouchableOpacity>
             </View>
           </View>
+          </ScrollView>
         </View>
       </Modal>
       <View style={{ backgroundColor: '#321637', height: '8%', width: '100%', justifyConetent: 'center', alignItems: 'center' }}>
@@ -277,7 +348,7 @@ const reviews = ({ navigation }) => {
         data={Locations}
         renderItem={({ item, index }) => (
           <TouchableOpacity
-            onPress={() => navigation.navigate('PostDetails', { data: item })}
+            onPress={() => navigation.navigate('PostDetails', { locID: item.location_id })}
             style={{
               backgroundColor: '#FFFFFF',
               borderRadius: 10,

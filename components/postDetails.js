@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react'
-import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity, TextInput, ToastAndroid, ScrollView } from 'react-native'
+import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity, TextInput, ToastAndroid, ScrollView, ActivityIndicator } from 'react-native'
 import Modal from 'react-native-modal'
 import { Rating, AirbnbRating } from 'react-native-ratings'
 import Icon from 'react-native-vector-icons/AntDesign'
 import AsyncStorage from '@react-native-community/async-storage'
-import { ActivityIndicator } from 'react-native-paper'
 // import Icon from 'react-native-vector-icons/AntDesign'
 
 const PostDetails = (props) => {
@@ -18,22 +17,45 @@ const PostDetails = (props) => {
   const [overall_rating, setOverAllRating] = useState(0)
   const [review_body, setReiewBody] = useState('')
   const [locID, setLocationID] = useState(0)
-  const [item, setItem] = useState(props.route.params.data)
+  const [item, setItem] = useState({})
   const [user_IDD, setUserID] = useState(0)
   const [loader, setLoader] = useState(false)
   const [obj, setObj] = useState({})
   const [objIndex, setObjIndex] = useState(-1)
   const [review_IDDD, setReviewIDD] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
+
 
   useEffect(() => {
     async function tokenData () {
       const userID = await AsyncStorage.getItem('userID')
       if (userID) {
         setUserID(userID)
+        getPostData()
       }
     }
     tokenData()
   }, [])
+
+  const getPostData = async () => {
+    const token = await AsyncStorage.getItem('token')
+    fetch('http://10.0.2.2:3333/api/1.0.0/location/' + props.route.params.locID, {
+      method: 'get',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Authorization': token
+      }
+    })
+      .then(res => res.json())
+      .then(response => {
+        console.log(response)
+        setItem(response)
+        setIsLoading(false)
+      })
+      .catch(err => {
+        console.log(err)
+      })
+  }
   const overAllRating = (rating) => {
     setOverAllRating(rating)
   }
@@ -79,6 +101,42 @@ const PostDetails = (props) => {
       .catch(error => console.log(error))
   }
 
+  const onLike = async (i,val, reviewID, locID) => {
+    const token = await AsyncStorage.getItem('token')
+    console.log('http://10.0.2.2:3333/api/1.0.0/location/' + locID + '/review/' + reviewID+"/like")
+    fetch('http://10.0.2.2:3333/api/1.0.0/location/' + locID + '/review/' + reviewID+"/like", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Authorization': token
+      }
+    })
+      // .then(res => res.json())
+      .then(response => {
+        console.log('hhhhhhhhhhhhhhh', response)
+        const a = Object.assign([], item.location_reviews)
+        const b = item
+    a[i] = {
+      likes: val.likes + 1,
+      review_body: val.review_body,
+      review_clenlinessrating:val.review_clenlinessrating,
+      review_id: val.review_id,
+      review_location_id: val.review_location_id,
+      review_overallrating: val.review_overallrating,
+      review_pricerating: val.review_pricerating,
+      review_qualityrating: val.review_qualityrating,
+      review_user_id: val.review_user_id
+    }
+    b.location_reviews = a
+    setItem(b)
+    setTimeout(() => {
+      console.log(b)
+      setLoader(false)
+    }, 2000)
+      })
+      .catch(error => console.log(error))
+  }
+
   const updateRviewTemp = (val, index) => {
     const a = Object.assign([], item.location_reviews)
     const b = item
@@ -104,13 +162,21 @@ const PostDetails = (props) => {
   const updateReview = async (val, index, locID, reviewID) => {
     const token = await AsyncStorage.getItem('token')
     setLoader(true)
-    console.log('http://10.0.2.2:3333/api/1.0.0/location/' + locID + '/review/' + reviewID)
+    const  data = {
+      "overall_rating": overall_rating == 0 ? val.review_overallrating : overall_rating,
+       "price_rating": price_rating == 0 ? val.review_pricerating : price_rating,
+       "quality_rating": quality_rating == 0 ? val.review_qualityrating : quality_rating,
+       "clenliness_rating": clenliness_rating == 0 ? val.review_clenlinessrating : clenliness_rating,
+       "review_body": review_body == '' ? val.review_body : review_body,
+     }
+    console.log('http://10.0.2.2:3333/api/1.0.0/location/' + locID + '/review/' + reviewID,data)
     fetch('http://10.0.2.2:3333/api/1.0.0/location/' + locID + '/review/' + reviewID, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
         'X-Authorization': token
-      }
+      },
+      body : JSON.stringify(data)
     })
       // .then(res => res.json())
       .then(response => {
@@ -119,7 +185,12 @@ const PostDetails = (props) => {
       })
       .catch(error => console.log(error))
   }
-
+  if(isLoading) {
+    return <View style={{flex : 1, justifyContent : 'center', alignItems : 'center'}}>
+      <ActivityIndicator size={30} color='red' />
+    </View>
+  }
+  else
   return (
     <View style={styles.MainView}>
       <Modal
@@ -299,7 +370,7 @@ const PostDetails = (props) => {
                         <View style={{ justifyContent: 'space-between', flexDirection: 'row', marginTop: 10, borderTopWidth: 1, borderBottomWidth: 1, borderBottomColor: 'lightgrey', borderTopColor: 'lightgrey', paddingVertical: 15, paddingHorizontal: 10 }}>
                           <Text>{data.review_body}</Text>
                           <View>
-                            <TouchableOpacity onPress={() => setLike(true)}>
+                            <TouchableOpacity onPress={() => {setLoader(true);onLike(index, data, data.review_id, data.review_location_id)}}>
                               <Icon name='heart' color={like ? 'red' : 'grey'} size={20} />
                             </TouchableOpacity>
                             <Text style={{ fontSize: 10, textAlign: 'center' }}>{data.likes}</Text>

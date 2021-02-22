@@ -138,10 +138,11 @@ const reviews = ({ navigation }) => {
       .then(response => {
         console.log(response)
         Posts(response.favourite_locations)
-        if (avatarSource != {}) {
+        if (avatarSource != '') {
           response.reviews.map((data, index) => {
            if  (data.review.review_body == review_Body) {
             addPhoto(data.review.review_id)
+            console.log("hello add photo called")
            }
           })
         }
@@ -214,8 +215,9 @@ const reviews = ({ navigation }) => {
       .catch(eror => console.log(eror))
   }
 
-  const addPhoto = (reviewID) => {
+  const addPhoto = async (reviewID) => {
     // alert(reviewID +"           "+locID)
+    const token = await AsyncStorage.getItem('token')
     fetch('http://10.0.2.2:3333/api/1.0.0/location/' + locID + '/review/'+reviewID+'/photo', {
       method: 'POST',
       headers: {
@@ -227,6 +229,7 @@ const reviews = ({ navigation }) => {
       .then(response => {
         console.log(response)
         setTypeModalVisible(false)
+        console.log("add photo response")
         getUserData()
         ToastAndroid.show('Review added', ToastAndroid.SHORT, ['UIAlertController'])
       })
@@ -250,15 +253,15 @@ const reviews = ({ navigation }) => {
         <View style={styles.modalContainer1}>
           <ScrollView>
           <View style={{ paddingHorizontal: 15 }}>
-            {/* {
+            {
               imageLoader ?
               <ActivityIndicator size={30} color={'red'} />
               :
-              avatarSource == {} ?
+              avatarSource != '' ?
               <Image style={{height : 150, width : '100%'}} source={avatarSource} ></Image>
               :
               null
-            } */}
+            }
             <View style={{ paddingTop: 15 }}>
               <Text style={{ fontSize: 15, fontWeight: 'bold' }}>Overall Rating</Text>
               <Rating

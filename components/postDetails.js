@@ -24,6 +24,10 @@ const PostDetails = (props) => {
   const [objIndex, setObjIndex] = useState(-1)
   const [review_IDDD, setReviewIDD] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const [imageModal, setImageModal] = useState(false)
+  const [revImage, setRevImage] = useState('')
+
+
 
 
   useEffect(() => {
@@ -185,6 +189,33 @@ const PostDetails = (props) => {
       })
       .catch(error => console.log(error))
   }
+
+  const showImage = async (locationID, revID) => {
+    const token = await AsyncStorage.getItem('token')
+    console.log('http://10.0.2.2:3333/api/1.0.0/location/'+locationID+'/review/'+revID+'/photo')
+    fetch('http://localhost:3333/api/1.0.0/location/4/review/56/photo', {
+      method: 'GET',
+      headers: {
+        // 'Content-Type': 'application/json',
+        'X-Authorization': token
+      }
+    })
+      .then(response => {
+        console.log('hhhhhhhhhhhhhhh', response)
+        if (response.status == 200 || response.status == 201) {
+        setRevImage(response)
+        }
+        setImageModal(true)
+      })
+      .catch(error => {
+        console.log(error)
+        setImageModal(true)
+      })
+  }
+
+
+
+
   if(isLoading) {
     return <View style={{flex : 1, justifyContent : 'center', alignItems : 'center'}}>
       <ActivityIndicator size={30} color='red' />
@@ -193,6 +224,47 @@ const PostDetails = (props) => {
   else
   return (
     <View style={styles.MainView}>
+      <Modal
+        onBackdropPress={() => {
+          setImageModal(false)
+        }}
+        isVisible={imageModal}
+        animationType='slide'
+        animationInTiming={500}
+        style={styles.modal}
+        onBackButtonPress={() => setImageModal(false)}
+        onRequestClose={() => {
+          setImageModal(false)
+        }}
+      >
+        <View style={styles.modalContainer1}>
+          <View style={{ paddingHorizontal: 15 }}>
+            {
+              revImage != '' ?
+              <Image style={{width : '100%', height : 350}} source={revImage}></Image>
+              :
+              <Text style={{fontSize : 16, color : 'black', fontWeight : 'bold', textAlign : 'center'}} >No Image found</Text>
+            }
+            <View style={styles.btnContainer}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => {
+                  setImageModal(false)
+                }}
+              >
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    marginRight: 5
+                  }}
+                >
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
       <Modal
         onBackdropPress={() => {
           setTypeModalVisible(false)
@@ -308,15 +380,13 @@ const PostDetails = (props) => {
               <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 10 }}>Post Reviews</Text>
               {
                   item.location_reviews.map((data, index) => {
-                    console.log(data)
-                    console.log(user_IDD + '                   ' + data.review_user_id)
                     return (
-                      <TouchableOpacity disabled={user_IDD != data.review_user_id} style={{ paddingVertical: 5 }} onPress={() => { setObj(data); setLocationID(data.review_location_id); setObjIndex(index); setReviewIDD(data.review_id); setTypeModalVisible(true) }}>
+                      <TouchableOpacity disabled={user_IDD != data.review_user_id} style={{ paddingVertical: 5 }} onPress={() => { setObj(data); setLocationID(item.location_id); setObjIndex(index); setReviewIDD(data.review_id); setTypeModalVisible(true) }}>
                         {
                           user_IDD == data.review_user_id
                             ? <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10 }}>
                               <Text style={{ fontSize: 16, color: 'grey' }}>Delete</Text>
-                              <TouchableOpacity onPress={() => { setLoader(true); onDeleteClick(index, data.review_id, data.review_location_id) }}>
+                              <TouchableOpacity onPress={() => { setLoader(true); onDeleteClick(index, data.review_id, item.location_id) }}>
                                 <Icon name='delete' size={25} color='red' />
                               </TouchableOpacity>
                             </View>
@@ -366,11 +436,14 @@ const PostDetails = (props) => {
                             startingValue={data.review_clenlinessrating}
                           />
                         </View>
-
+                        <TouchableOpacity onPress={()=>showImage(item.location_id, data.review_id)} style={{ justifyContent: 'space-between', flexDirection: 'row', marginTop: 10, borderTopWidth: 1, borderBottomWidth: 1, borderBottomColor: 'lightgrey', borderTopColor: 'lightgrey', paddingVertical: 15, paddingHorizontal: 10 }}>
+                          <Text style={{fontSize : 16, fontWeight : 'bold'}} >Click to see image</Text>
+                          <Icon name='picture' color={'black'} size={30} />
+                        </TouchableOpacity>
                         <View style={{ justifyContent: 'space-between', flexDirection: 'row', marginTop: 10, borderTopWidth: 1, borderBottomWidth: 1, borderBottomColor: 'lightgrey', borderTopColor: 'lightgrey', paddingVertical: 15, paddingHorizontal: 10 }}>
                           <Text>{data.review_body}</Text>
                           <View>
-                            <TouchableOpacity onPress={() => {setLoader(true);onLike(index, data, data.review_id, data.review_location_id)}}>
+                            <TouchableOpacity onPress={() => {setLoader(true);onLike(index, data, data.review_id, item.location_id)}}>
                               <Icon name='heart' color={like ? 'red' : 'grey'} size={20} />
                             </TouchableOpacity>
                             <Text style={{ fontSize: 10, textAlign: 'center' }}>{data.likes}</Text>

@@ -7,7 +7,6 @@ import AsyncStorage from '@react-native-community/async-storage'
 import { launchCamera } from 'react-native-image-picker'
 import { ScrollView } from 'react-native-gesture-handler'
 import { ActivityIndicator } from 'react-native-paper'
-import { useFocusEffect } from '@react-navigation/native'
 
 const reviews = ({ navigation }) => {
   const [Locations, setLocations] = useState([])
@@ -32,12 +31,6 @@ const reviews = ({ navigation }) => {
 
     return unsubscribe
   }, [navigation])
-
-  useFocusEffect(
-    React.useCallback(() => {
-      getUserData()
-    }, [])
-  )
 
   const imageUpload = () => {
     const options = {
@@ -78,39 +71,6 @@ const reviews = ({ navigation }) => {
     setCleanlinessRating(rating)
   }
 
-  const Posts = async (liked) => {
-    console.log(liked)
-    const token = await AsyncStorage.getItem('token')
-    fetch('http://10.0.2.2:3333/api/1.0.0/find', {
-      method: 'get',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Authorization': token
-      }
-    })
-      .then(res => res.json())
-      .then(response => {
-        console.log(response)
-        const tempArray = response
-        if (liked.length > 0) {
-          liked.map((item, index) => {
-            response.map((data, i) => {
-              if (item.location_id == data.location_id) {
-                tempArray[i].favorite = true
-              } else {
-                tempArray[i].favorite = false
-              }
-            })
-          })
-          console.log('hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh', tempArray)
-          setLocations(tempArray)
-        } else {
-          setLocations(response)
-        }
-      })
-      .catch(error => console.log(error))
-  }
-
   const likeLoation = async (locID, fav, item, index) => {
     const token = await AsyncStorage.getItem('token')
     console.log('http://10.0.2.2:3333/api/1.0.0/location/' + locID + '/favourtie')
@@ -124,15 +84,7 @@ const reviews = ({ navigation }) => {
       // .then(res => res.json())
       .then(response => {
         console.log('hhhhhhhhhhhhhhh', response)
-        let favor = true
-        for (let index = 0; index < favrites.length; index++) {
-          if (item.location_id == favrites[index].location_id) {
-            favor = false
-          }
-        }
-        setTimeout(() => {
-          editLocations(favor, item, index)
-        }, 2000)
+        editLocations(fav, item, index)
       })
       .catch(error => console.log(error))
   }
@@ -151,7 +103,7 @@ const reviews = ({ navigation }) => {
       .then(response => {
         console.log(response)
         setFavorites(response.favourite_locations)
-        Posts(response.favourite_locations)
+        setLocations(response.reviews)
         if (avatarSource != '') {
           response.reviews.map((data, index) => {
             if (data.review.review_body == review_Body) {
@@ -164,30 +116,6 @@ const reviews = ({ navigation }) => {
       .catch(err => {
         console.log(err)
       })
-  }
-
-  const editLocations = (fav, item, index) => {
-    if (fav != false) {
-      const a = Object.assign([], Locations)
-      a[index] = {
-        location_id: item.location_id,
-        location_name: item.location_name,
-        location_town: item.location_town,
-        photo_path: item.photo_path,
-        latitude: item.latitude,
-        favorite: true,
-        longitude: item.longitude,
-        avg_overall_rating: item.avg_overall_rating,
-        avg_price_rating: item.avg_price_rating,
-        avg_quality_rating: item.avg_quality_rating,
-        avg_clenliness_rating: item.avg_clenliness_rating,
-        location_reviews: item.location_reviews
-      }
-      alert('Added to favorites')
-      setLocations(a)
-    } else {
-      alert('Already Added')
-    }
   }
 
   const addReview = async () => {
@@ -230,13 +158,18 @@ const reviews = ({ navigation }) => {
     })
       .then(response => {
         console.log(response)
-        setAvatarSource('')
         setTypeModalVisible(false)
         console.log('add photo response')
         getUserData()
         ToastAndroid.show('Review added', ToastAndroid.SHORT, ['UIAlertController'])
       })
       .catch(eror => console.log(eror))
+  }
+
+  const setData = val => {
+    const a = Object.assign([], Locations)
+    a.splice(val, 1)
+    setLocations(a)
   }
 
   return (
@@ -314,7 +247,6 @@ const reviews = ({ navigation }) => {
                 <TouchableOpacity
                   style={styles.cancelBtn}
                   onPress={() => {
-                    setAvatarSource('')
                     setTypeModalVisible(false)
                   }}
                 >
@@ -353,7 +285,7 @@ const reviews = ({ navigation }) => {
         data={Locations}
         renderItem={({ item, index }) => (
           <TouchableOpacity
-            onPress={() => navigation.navigate('PostDetails', { locID: item.location_id })}
+            onPress={() => navigation.navigate('MyPostDetails', { item: item, index: index, setData: setData })}
             style={{
               backgroundColor: '#FFFFFF',
               borderRadius: 10,
@@ -361,16 +293,13 @@ const reviews = ({ navigation }) => {
               marginTop: 20
             }}
           >
-            <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{item.location_name}</Text>
+            <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{item.location.location_name}</Text>
             <Image style={{ height: 290, width: '100%', marginTop: 10 }} source={{ uri: 'https://media3.s-nbcnews.com/j/newscms/2019_33/2203981/171026-better-coffee-boost-se-329p_67dfb6820f7d3898b5486975903c2e51.fit-1240w.jpg' }} />
             <View style={{ justifyContent: 'space-between', flexDirection: 'row', marginTop: 10, borderTopWidth: 1, borderBottomWidth: 1, borderBottomColor: 'lightgrey', borderTopColor: 'lightgrey', paddingVertical: 15, paddingHorizontal: 10 }}>
-              <TouchableOpacity onPress={() => likeLoation(item.location_id, item.favorite, item, index)}>
-                {/* <Icon name='heart' color={item.favorite ? 'red' : 'grey'} size={25} /> */}
-                <Text>Add to Favorite</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => { setLocationID(item.location_id), setTypeModalVisible(true) }}>
-                <Text style={{ fontSize: 18 }}>Review</Text>
-              </TouchableOpacity>
+              {/* <TouchableOpacity onPress={() => likeLoation(item.location.location_id, item.location.favorite, item, index)}>
+                <Text>Add to favorites</Text>
+              </TouchableOpacity> */}
+              <View />
             </View>
           </TouchableOpacity>
         )}

@@ -17,7 +17,7 @@ const PostDetails = (props) => {
   const [overall_rating, setOverAllRating] = useState(0)
   const [review_body, setReiewBody] = useState('')
   const [locID, setLocationID] = useState(0)
-  const [item, setItem] = useState({})
+  const [item, setItem] = useState(props.route.params.item)
   const [user_IDD, setUserID] = useState(0)
   const [loader, setLoader] = useState(false)
   const [obj, setObj] = useState({})
@@ -32,31 +32,10 @@ const PostDetails = (props) => {
       const userID = await AsyncStorage.getItem('userID')
       if (userID) {
         setUserID(userID)
-        getPostData()
       }
     }
     tokenData()
   }, [])
-
-  const getPostData = async () => {
-    const token = await AsyncStorage.getItem('token')
-    fetch('http://10.0.2.2:3333/api/1.0.0/location/' + props.route.params.locID, {
-      method: 'get',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Authorization': token
-      }
-    })
-      .then(res => res.json())
-      .then(response => {
-        console.log('posssssssssssssssssttttttttttts', response)
-        setItem(response)
-        setIsLoading(false)
-      })
-      .catch(err => {
-        console.log(err)
-      })
-  }
   const overAllRating = (rating) => {
     setOverAllRating(rating)
   }
@@ -74,17 +53,10 @@ const PostDetails = (props) => {
   }
 
   const deleteReview = (val) => {
-    const a = Object.assign([], item.location_reviews)
-    const b = item
-    a.splice(val, 1)
-    b.location_reviews = a
-    setItem(b)
-    setTimeout(() => {
-      setLoader(false)
-    }, 2000)
+
   }
 
-  const onDeleteClick = async (i, reviewID, locID) => {
+  const onDeleteClick = async (reviewID, locID) => {
     const token = await AsyncStorage.getItem('token')
     console.log('http://10.0.2.2:3333/api/1.0.0/location/' + locID + '/review/' + reviewID)
     fetch('http://10.0.2.2:3333/api/1.0.0/location/' + locID + '/review/' + reviewID, {
@@ -97,13 +69,13 @@ const PostDetails = (props) => {
       // .then(res => res.json())
       .then(response => {
         console.log('hhhhhhhhhhhhhhh', response)
-        deleteReview(i)
+        props.route.params.setData(props.route.params.index)
+        props.navigation.goBack()
       })
       .catch(error => console.log(error))
   }
 
-  const onLike = async (i, val, reviewID, locID, likes) => {
-    console.log(item)
+  const onLike = async (i, val, reviewID, locID) => {
     const token = await AsyncStorage.getItem('token')
     console.log('http://10.0.2.2:3333/api/1.0.0/location/' + locID + '/review/' + reviewID + '/like')
     fetch('http://10.0.2.2:3333/api/1.0.0/location/' + locID + '/review/' + reviewID + '/like', {
@@ -114,79 +86,22 @@ const PostDetails = (props) => {
       }
     })
       // .then(res => res.json())
-      .then(async response => {
-        console.log('hhhhhhhhhhhhhhh', response)
-        fetch('http://10.0.2.2:3333/api/1.0.0/location/' + props.route.params.locID, {
-          method: 'get',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Authorization': token
-          }
-        })
-          .then(res => res.json())
-          .then(response => {
-            console.log('posssssssssssssssssttttttttttts', response)
-            setTimeout(() => {
-              console.log(likes + ' == ' + response.location_reviews[i].likes)
-              if (likes == response.location_reviews[i].likes) {
-                setTimeout(() => {
-                  unLike(i, val, reviewID, locID, likes)
-                }, 2000)
-              } else {
-                const a = Object.assign([], item.location_reviews)
-                const b = item
-                a[i] = {
-                  likes: val.likes + 1,
-                  review_body: val.review_body,
-                  clenliness_rating: val.clenliness_rating,
-                  review_id: val.review_id,
-                  overall_rating: val.overall_rating,
-                  price_rating: val.price_rating,
-                  quality_rating: val.quality_rating
-                }
-                b.location_reviews = a
-                setItem(b)
-                setTimeout(() => {
-                  console.log(b)
-                  setLoader(false)
-                }, 2000)
-              }
-            }, 2000)
-          })
-          .catch(err => {
-            console.log(err)
-          })
-      })
-      .catch(error => console.log(error))
-  }
-
-  const unLike = async (i, val, reviewID, locID, likes) => {
-    const token = await AsyncStorage.getItem('token')
-    fetch('http://10.0.2.2:3333/api/1.0.0/location/' + locID + '/review/' + reviewID + '/like', {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Authorization': token
-      }
-    })
-      // .then(res => res.json())
       .then(response => {
-        console.log('hhhhhhhhhhhhhhh inside', response)
-        console.log(val)
-        getPostData()
+        console.log('hhhhhhhhhhhhhhh', response)
         const a = Object.assign([], item.location_reviews)
         const b = item
         a[i] = {
-          likes: val.likes - 1,
+          likes: val.likes + 1,
           review_body: val.review_body,
-          clenliness_rating: val.clenliness_rating,
+          review_clenlinessrating: val.review_clenlinessrating,
           review_id: val.review_id,
-          overall_rating: val.overall_rating,
-          price_rating: val.price_rating,
-          quality_rating: val.quality_rating
+          review_location_id: val.review_location_id,
+          review_overallrating: val.review_overallrating,
+          review_pricerating: val.review_pricerating,
+          review_qualityrating: val.review_qualityrating,
+          review_user_id: val.review_user_id
         }
         b.location_reviews = a
-        console.log('hello inside')
         setItem(b)
         setTimeout(() => {
           console.log(b)
@@ -197,19 +112,19 @@ const PostDetails = (props) => {
   }
 
   const updateRviewTemp = (val, index) => {
-    const a = Object.assign([], item.location_reviews)
+    let a = val
     const b = item
-    a[index] = {
+    a = {
       likes: val.likes,
       review_body: review_body == '' ? val.review_body : review_body,
-      review_clenlinessrating: clenliness_rating == 0 ? val.clenliness_rating : clenliness_rating,
+      clenliness_rating: clenliness_rating == 0 ? val.clenliness_rating : clenliness_rating,
       review_id: val.review_id,
-      review_overallrating: overall_rating == 0 ? val.overall_rating : overall_rating,
-      review_pricerating: price_rating == 0 ? val.price_rating : price_rating,
-      review_qualityrating: quality_rating == 0 ? val.quality_rating : quality_rating
+      overall_rating: overall_rating == 0 ? val.overall_rating : overall_rating,
+      price_rating: price_rating == 0 ? val.price_rating : price_rating,
+      quality_rating: quality_rating == 0 ? val.quality_rating : quality_rating
     }
 
-    b.location_reviews = a
+    b.review = a
     setItem(b)
     setTimeout(() => {
       setLoader(false)
@@ -282,152 +197,145 @@ const PostDetails = (props) => {
       .catch(eror => console.log(eror))
   }
 
-  if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size={30} color='red' />
-      </View>
-    )
-  } else {
-    return (
-      <View style={styles.MainView}>
-        <Modal
-          onBackdropPress={() => {
-            setRevImage(''); setImageModal(false)
-          }}
-          isVisible={imageModal}
-          animationType='slide'
-          animationInTiming={500}
-          style={styles.modal}
-          onBackButtonPress={() => { setRevImage(''); setImageModal(false) }}
-          onRequestClose={() => {
-            setRevImage(''); setImageModal(false)
-          }}
-        >
-          <View style={styles.modalContainer1}>
-            <View style={{ paddingHorizontal: 15 }}>
-              {
+  return (
+    <View style={styles.MainView}>
+      <Modal
+        onBackdropPress={() => {
+          setRevImage(''); setImageModal(false)
+        }}
+        isVisible={imageModal}
+        animationType='slide'
+        animationInTiming={500}
+        style={styles.modal}
+        onBackButtonPress={() => { setRevImage(''); setImageModal(false) }}
+        onRequestClose={() => {
+          setRevImage(''); setImageModal(false)
+        }}
+      >
+        <View style={styles.modalContainer1}>
+          <View style={{ paddingHorizontal: 15 }}>
+            {
               revImage != ''
                 ? <Image style={{ width: '100%', height: 350 }} source={{ uri: revImage }} />
                 : <Text style={{ fontSize: 16, color: 'black', fontWeight: 'bold', textAlign: 'center' }}>No Image found</Text>
             }
-              <View style={styles.btnContainer}>
-                <TouchableOpacity
-                  style={styles.cancelBtn}
-                  onPress={() => {
-                    setRevImage(''); setImageModal(false)
+            <View style={styles.btnContainer}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => {
+                  setRevImage(''); setImageModal(false)
+                }}
+              >
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    marginRight: 5
                   }}
                 >
-                  <Text
-                    style={{
-                      textAlign: 'center',
-                      marginRight: 5
-                    }}
-                  >
-                    Cancel
-                  </Text>
-                </TouchableOpacity>
-              </View>
+                  Cancel
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </Modal>
-        <Modal
-          onBackdropPress={() => {
-            setTypeModalVisible(false)
-          }}
-          isVisible={typeModalVisible}
-          animationType='slide'
-          animationInTiming={500}
-          style={styles.modal}
-          onBackButtonPress={() => setTypeModalVisible(false)}
-          onRequestClose={() => {
-            setTypeModalVisible(false)
-          }}
-        >
-          <View style={styles.modalContainer1}>
-            <View style={{ paddingHorizontal: 15 }}>
-              <View style={{ paddingVertical: 15, flexDirection: 'row', justifyContent: 'space-between' }}>
-                <Text style={{ fontSize: 15, fontWeight: 'bold' }}>Overall Rating</Text>
-                <Rating
-                  type='star'
-                  ratingCount={5}
-                  imageSize={30}
-                  onFinishRating={overAllRating}
-                  startingValue={obj.overall_rating}
-                />
-              </View>
-              <View style={{ paddingVertical: 15, flexDirection: 'row', justifyContent: 'space-between' }}>
-                <Text style={{ fontSize: 15, fontWeight: 'bold' }}>Price Rating</Text>
-                <Rating
-                  type='star'
-                  ratingCount={5}
-                  imageSize={30}
-                  onFinishRating={priceRating}
-                  startingValue={obj.price_rating}
-                />
-              </View>
-              <View style={{ paddingVertical: 15, flexDirection: 'row', justifyContent: 'space-between' }}>
-                <Text style={{ fontSize: 15, fontWeight: 'bold' }}>Quality Rating</Text>
-                <Rating
-                  type='star'
-                  ratingCount={5}
-                  imageSize={30}
-                  onFinishRating={qualityRating}
-                  startingValue={obj.quality_rating}
-                />
-              </View>
-              <View style={{ paddingVertical: 15, flexDirection: 'row', justifyContent: 'space-between' }}>
-                <Text style={{ fontSize: 15, fontWeight: 'bold' }}>Claenliness Rating</Text>
-                <Rating
-                  type='star'
-                  ratingCount={5}
-                  imageSize={30}
-                  onFinishRating={cleanlinessRating}
-                  startingValue={obj.clenliness_rating}
-                />
-              </View>
-              <View style={{ paddingVertical: 15 }}>
-                <Text style={{ fontSize: 15, fontWeight: 'bold' }}>Review The Place</Text>
-                <TextInput placeholder='Type here...' onChangeText={val => setReiewBody(val)} style={{ fontSize: 16, color: 'black' }} />
-              </View>
-              <View style={styles.btnContainer}>
-                <TouchableOpacity
-                  style={styles.cancelBtn}
-                  onPress={() => {
-                    setTypeModalVisible(false)
-                  }}
-                >
-                  <Text
-                    style={{
-                      textAlign: 'center',
-                      marginRight: 5
-                    }}
-                  >
-                    Cancel
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => { setTypeModalVisible(false); updateReview(obj, objIndex, locID, review_IDDD) }}
-                  style={styles.doneBtn}
-                >
-                  <Text
-                    style={{
-                      color: 'white',
-                      textAlign: 'center'
-                    }}
-                  >
-                    Done
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-        <View style={{ backgroundColor: '#321637', height: '8%', width: '100%', justifyConetent: 'center', alignItems: 'center' }}>
-          <Text style={styles.Header}>Coffee Shop Review</Text>
         </View>
-        {
+      </Modal>
+      <Modal
+        onBackdropPress={() => {
+          setTypeModalVisible(false)
+        }}
+        isVisible={typeModalVisible}
+        animationType='slide'
+        animationInTiming={500}
+        style={styles.modal}
+        onBackButtonPress={() => setTypeModalVisible(false)}
+        onRequestClose={() => {
+          setTypeModalVisible(false)
+        }}
+      >
+        <View style={styles.modalContainer1}>
+          <View style={{ paddingHorizontal: 15 }}>
+            <View style={{ paddingVertical: 15, flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text style={{ fontSize: 15, fontWeight: 'bold' }}>Overall Rating</Text>
+              <Rating
+                type='star'
+                ratingCount={5}
+                imageSize={30}
+                onFinishRating={overAllRating}
+                startingValue={obj.overall_rating}
+              />
+            </View>
+            <View style={{ paddingVertical: 15, flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text style={{ fontSize: 15, fontWeight: 'bold' }}>Price Rating</Text>
+              <Rating
+                type='star'
+                ratingCount={5}
+                imageSize={30}
+                onFinishRating={priceRating}
+                startingValue={obj.price_rating}
+              />
+            </View>
+            <View style={{ paddingVertical: 15, flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text style={{ fontSize: 15, fontWeight: 'bold' }}>Quality Rating</Text>
+              <Rating
+                type='star'
+                ratingCount={5}
+                imageSize={30}
+                onFinishRating={qualityRating}
+                startingValue={obj.quality_rating}
+              />
+            </View>
+            <View style={{ paddingVertical: 15, flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text style={{ fontSize: 15, fontWeight: 'bold' }}>Claenliness Rating</Text>
+              <Rating
+                type='star'
+                ratingCount={5}
+                imageSize={30}
+                onFinishRating={cleanlinessRating}
+                startingValue={obj.clenliness_rating}
+              />
+            </View>
+            <View style={{ paddingVertical: 15 }}>
+              <Text style={{ fontSize: 15, fontWeight: 'bold' }}>Review The Place</Text>
+              <TextInput placeholder='Type here...' onChangeText={val => setReiewBody(val)} style={{ fontSize: 16, color: 'black' }} />
+            </View>
+            <View style={styles.btnContainer}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => {
+                  setTypeModalVisible(false)
+                }}
+              >
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    marginRight: 5
+                  }}
+                >
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => { setTypeModalVisible(false); updateReview(obj, objIndex, locID, review_IDDD) }}
+                style={styles.doneBtn}
+              >
+                <Text
+                  style={{
+                    color: 'white',
+                    textAlign: 'center'
+                  }}
+                >
+                  Done
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      <View style={{ backgroundColor: '#321637', height: '8%', width: '100%', justifyConetent: 'center', alignItems: 'center' }}>
+        <Text style={styles.Header}>Coffee Shop Review</Text>
+      </View>
+      {
         loader
           ? <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             <ActivityIndicator size={30} color='red' />
@@ -441,23 +349,24 @@ const PostDetails = (props) => {
                 marginTop: 20
               }}
             >
-              <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{item.location_name}</Text>
+              <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{item.location.location_name}</Text>
               <Image style={{ height: 290, width: '100%', marginTop: 10 }} source={{ uri: 'https://media3.s-nbcnews.com/j/newscms/2019_33/2203981/171026-better-coffee-boost-se-329p_67dfb6820f7d3898b5486975903c2e51.fit-1240w.jpg' }} />
               <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 10 }}>Post Reviews</Text>
-              {
+              {/* {
                   item.location_reviews.map((data, index) => {
-                    return (
-                      <TouchableOpacity disabled={user_IDD != data.review_user_id} style={{ paddingVertical: 5 }} onPress={() => { setObj(data); setLocationID(item.location_id); setObjIndex(index); setReviewIDD(data.review_id); setTypeModalVisible(true) }}>
-                        {
+                    return ( */}
+              {
+                    item.review
+                      ? <TouchableOpacity style={{ paddingVertical: 5 }} onPress={() => { setObj(item.review); setLocationID(item.location.location_id); setReviewIDD(item.review.review_id); setTypeModalVisible(true) }}>
+                        {/* {
                           user_IDD == data.review_user_id
-                            ? <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10 }}>
-                              <Text style={{ fontSize: 16, color: 'grey' }}>Delete</Text>
-                              <TouchableOpacity onPress={() => { setLoader(true); onDeleteClick(index, data.review_id, item.location_id) }}>
-                                <Icon name='delete' size={25} color='red' />
-                              </TouchableOpacity>
-                              </View>
-                            : null
-                        }
+                            ?  */}
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10 }}>
+                          <Text style={{ fontSize: 16, color: 'grey' }}>Delete</Text>
+                          <TouchableOpacity onPress={() => { onDeleteClick(item.review.review_id, item.location.location_id) }}>
+                            <Icon name='delete' size={25} color='red' />
+                          </TouchableOpacity>
+                        </View>
                         <View style={{ paddingVertical: 5, flexDirection: 'row', justifyContent: 'space-between' }}>
                           <Text style={{ fontSize: 15 }}>Overall Rating</Text>
                           <Rating
@@ -466,7 +375,7 @@ const PostDetails = (props) => {
                             imageSize={20}
                 // showRating
                             isDisabled
-                            startingValue={data.overall_rating}
+                            startingValue={item.review.overall_rating}
                           />
                         </View>
                         <View style={{ paddingVertical: 5, flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -477,7 +386,7 @@ const PostDetails = (props) => {
                             imageSize={20}
                 // showRating
                             isDisabled
-                            startingValue={data.quality_rating}
+                            startingValue={item.review.quality_rating}
                           />
                         </View>
                         <View style={{ paddingVertical: 5, flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -488,7 +397,7 @@ const PostDetails = (props) => {
                             imageSize={20}
                 // showRating
                             isDisabled
-                            startingValue={data.price_rating}
+                            startingValue={item.review.price_rating}
                           />
                         </View>
                         <View style={{ paddingVertical: 5, flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -499,36 +408,37 @@ const PostDetails = (props) => {
                             imageSize={20}
                 // showRating
                             isDisabled
-                            startingValue={data.clenliness_rating}
+                            startingValue={item.review.clenliness_rating}
                           />
                         </View>
                         <View style={{ justifyContent: 'space-between', flexDirection: 'row', marginTop: 10, borderTopWidth: 1, borderBottomWidth: 1, borderBottomColor: 'lightgrey', borderTopColor: 'lightgrey', paddingVertical: 15, paddingHorizontal: 10 }}>
-                          <TouchableOpacity onPress={() => showImage(item.location_id, data.review_id)}>
+                          <TouchableOpacity onPress={() => showImage(item.location.location_id, item.review.review_id)}>
                             <Text style={{ fontSize: 16, fontWeight: 'bold' }}>Click to see image</Text>
                           </TouchableOpacity>
-                          <TouchableOpacity onPress={() => removePhoto(item.location_id, data.review_id)}>
+                          <TouchableOpacity onPress={() => removePhoto(item.location.location_id, item.review.review_id)}>
                             <Text style={{ fontSize: 16, fontWeight: 'bold' }}>Delete Image</Text>
                           </TouchableOpacity>
                         </View>
                         <View style={{ justifyContent: 'space-between', flexDirection: 'row', marginTop: 10, borderTopWidth: 1, borderBottomWidth: 1, borderBottomColor: 'lightgrey', borderTopColor: 'lightgrey', paddingVertical: 15, paddingHorizontal: 10 }}>
-                          <Text>{data.review_body}</Text>
+                          <Text>{item.review.review_body}</Text>
                           <View>
-                            <TouchableOpacity onPress={() => { setLoader(true); onLike(index, data, data.review_id, item.location_id, data.likes) }}>
+                            <TouchableOpacity onPress={() => { setLoader(true); onLike(item.review, item.review.review_id, item.location.location_id) }}>
                               <Icon name='heart' color={like ? 'red' : 'grey'} size={20} />
                             </TouchableOpacity>
-                            <Text style={{ fontSize: 10, textAlign: 'center' }}>{data.likes}</Text>
+                            <Text style={{ fontSize: 10, textAlign: 'center' }}>{item.review.likes}</Text>
                           </View>
                         </View>
-                      </TouchableOpacity>
-                    )
+                        </TouchableOpacity>
+                      : null
+                }
+              {/* )
                   })
-              }
+              } */}
             </View>
             </ScrollView>
       }
-      </View>
-    )
-  }
+    </View>
+  )
 }
 
 const styles = StyleSheet.create({

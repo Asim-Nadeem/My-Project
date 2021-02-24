@@ -11,6 +11,8 @@ import LogoutScreen from './components/Logout'
 import LoginAndSignup from './components/LoginAndSignup'
 import UpdateProfile from './components/updateProfile'
 import PostDetails from './components/postDetails'
+import MyReviews from './components/myReviews'
+import MyPostDetails from './components/myPostDetails'
 
 const Tab = createBottomTabNavigator()
 
@@ -48,6 +50,18 @@ const myApp = () => {
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
               name='google-maps' color={color} size={26}
+            />
+          )
+        }}
+      />
+      <Tab.Screen
+        name='MY Reviews'
+        component={MyReviews}
+        options={{
+          tabBarLabel: 'My Reviews',
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons
+              name='book' color={color} size={26}
             />
           )
         }}
@@ -92,6 +106,10 @@ const MainStack = () => {
         <AuthStack.Screen
           name='PostDetails'
           component={PostDetails}
+        />
+        <AuthStack.Screen
+          name='MyPostDetails'
+          component={MyPostDetails}
         />
       </AuthStack.Navigator>
     </NavigationContainer>

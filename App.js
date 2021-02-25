@@ -4,7 +4,6 @@ import { NavigationContainer } from '@react-navigation/native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import { createStackNavigator } from '@react-navigation/stack'
-import HomeScreen from './components/home'
 import ReviewScreen from './components/reviews'
 import LocationScreen from './components/Location'
 import LogoutScreen from './components/Logout'
@@ -24,19 +23,9 @@ const myApp = () => {
     >
       <Tab.Screen
         name='Home'
-        component={HomeScreen}
-        options={{
-          tabBarLabel: 'Home',
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name='home' color={color} size={26} />
-          )
-        }}
-      />
-      <Tab.Screen
-        name='Reviews'
         component={ReviewScreen}
         options={{
-          tabBarLabel: 'Reviews',
+          tabBarLabel: 'Home',
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name='coffee' color={color} size={26} />
           )

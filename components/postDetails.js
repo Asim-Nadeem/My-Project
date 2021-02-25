@@ -127,8 +127,8 @@ const PostDetails = (props) => {
           .then(response => {
             console.log('posssssssssssssssssttttttttttts', response)
             setTimeout(() => {
-              console.log(likes + ' == ' + response.location_reviews[i].likes)
-              if (likes == response.location_reviews[i].likes) {
+              console.log(likes + ' === ' + response.location_reviews[i].likes)
+              if (likes === response.location_reviews[i].likes) {
                 setTimeout(() => {
                   unLike(i, val, reviewID, locID, likes)
                 }, 2000)
@@ -201,12 +201,12 @@ const PostDetails = (props) => {
     const b = item
     a[index] = {
       likes: val.likes,
-      review_body: review_body == '' ? val.review_body : review_body,
-      review_clenlinessrating: clenliness_rating == 0 ? val.clenliness_rating : clenliness_rating,
+      review_body: review_body === '' ? val.review_body : review_body,
+      review_clenlinessrating: clenliness_rating === 0 ? val.clenliness_rating : clenliness_rating,
       review_id: val.review_id,
-      review_overallrating: overall_rating == 0 ? val.overall_rating : overall_rating,
+      review_overallrating: overall_rating === 0 ? val.overall_rating : overall_rating,
       review_pricerating: price_rating == 0 ? val.price_rating : price_rating,
-      review_qualityrating: quality_rating == 0 ? val.quality_rating : quality_rating
+      review_qualityrating: quality_rating === 0 ? val.quality_rating : quality_rating
     }
 
     b.location_reviews = a
@@ -217,14 +217,29 @@ const PostDetails = (props) => {
   }
 
   const updateReview = async (val, index, locID, reviewID) => {
+    const profanity = ['cake', 'tea', 'pastries']
+
+    let isValidReview = true
+
+    for (const word of profanity) {
+      if (review_body.toLowerCase().includes(word)) {
+        isValidReview = false
+      }
+    }
+
+    if (!isValidReview) {
+      ToastAndroid.show('You cannot use cake, tea or pastries in your review!', ToastAndroid.SHORT, ['UIAlertController'])
+      return
+    }
+
     const token = await AsyncStorage.getItem('token')
     setLoader(true)
     const data = {
-      overall_rating: overall_rating == 0 ? val.overall_rating : overall_rating,
-      price_rating: price_rating == 0 ? val.price_rating : price_rating,
-      quality_rating: quality_rating == 0 ? val.quality_rating : quality_rating,
-      clenliness_rating: clenliness_rating == 0 ? val.clenliness_rating : clenliness_rating,
-      review_body: review_body == '' ? val.review_body : review_body
+      overall_rating: overall_rating === 0 ? val.overall_rating : overall_rating,
+      price_rating: price_rating === 0 ? val.price_rating : price_rating,
+      quality_rating: quality_rating === 0 ? val.quality_rating : quality_rating,
+      clenliness_rating: clenliness_rating === 0 ? val.clenliness_rating : clenliness_rating,
+      review_body: review_body === '' ? val.review_body : review_body
     }
     console.log('http://10.0.2.2:3333/api/1.0.0/location/' + locID + '/review/' + reviewID, data)
     fetch('http://10.0.2.2:3333/api/1.0.0/location/' + locID + '/review/' + reviewID, {
@@ -255,7 +270,7 @@ const PostDetails = (props) => {
     })
       .then(response => {
         console.log('hhhhhhhhhhhhhhh', response)
-        if (response.status == 200 || response.status == 201) {
+        if (response.status === 200 || response.status === 201) {
           setRevImage('http://10.0.2.2:3333/api/1.0.0/location/' + locationID + '/review/' + revID + '/photo')
         }
         setImageModal(true)
@@ -307,7 +322,7 @@ const PostDetails = (props) => {
           <View style={styles.modalContainer1}>
             <View style={{ paddingHorizontal: 15 }}>
               {
-              revImage != ''
+              revImage !== ''
                 ? <Image style={{ width: '100%', height: 350 }} source={{ uri: revImage }} />
                 : <Text style={{ fontSize: 16, color: 'black', fontWeight: 'bold', textAlign: 'center' }}>No Image found</Text>
             }
@@ -447,9 +462,9 @@ const PostDetails = (props) => {
               {
                   item.location_reviews.map((data, index) => {
                     return (
-                      <TouchableOpacity disabled={user_IDD != data.review_user_id} style={{ paddingVertical: 5 }} onPress={() => { setObj(data); setLocationID(item.location_id); setObjIndex(index); setReviewIDD(data.review_id); setTypeModalVisible(true) }}>
+                      <TouchableOpacity disabled={user_IDD !== data.review_user_id} style={{ paddingVertical: 5 }} onPress={() => { setObj(data); setLocationID(item.location_id); setObjIndex(index); setReviewIDD(data.review_id); setTypeModalVisible(true) }}>
                         {
-                          user_IDD == data.review_user_id
+                          user_IDD === data.review_user_id
                             ? <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10 }}>
                               <Text style={{ fontSize: 16, color: 'grey' }}>Delete</Text>
                               <TouchableOpacity onPress={() => { setLoader(true); onDeleteClick(index, data.review_id, item.location_id) }}>

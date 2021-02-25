@@ -104,9 +104,9 @@ const reviews = ({ navigation }) => {
         console.log(response)
         setFavorites(response.favourite_locations)
         setLocations(response.reviews)
-        if (avatarSource != '') {
+        if (avatarSource !== '') {
           response.reviews.map((data, index) => {
-            if (data.review.review_body == review_Body) {
+            if (data.review.review_body === review_Body) {
               addPhoto(data.review.review_id)
               console.log('hello add photo called')
             }
@@ -119,6 +119,21 @@ const reviews = ({ navigation }) => {
   }
 
   const addReview = async () => {
+    const profanity = ['cake', 'tea', 'pastries']
+
+    let isValidReview = true
+
+    for (const word of profanity) {
+      if (review_body.toLowerCase().includes(word)) {
+        isValidReview = false
+      }
+    }
+
+    if (!isValidReview) {
+      ToastAndroid.show('You cannot use cake, tea or pastries in your review!', ToastAndroid.SHORT, ['UIAlertController'])
+      return
+    }
+
     const token = await AsyncStorage.getItem('token')
     const data = JSON.stringify({
       overall_rating: overall_rating,

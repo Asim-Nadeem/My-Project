@@ -354,19 +354,19 @@ const LoginAndSignup = (props) => {
                       isLoading
                         ? <ActivityIndicator color='white' size={20} />
                         : <Text
-                            style={{
-                              fontSize: 16,
-                              color: 'white',
-                              alignSelf: 'center'
-                            }}
-                          >
+                          style={{
+                            fontSize: 16,
+                            color: 'white',
+                            alignSelf: 'center'
+                          }}
+                        >
                           Login
                         </Text>
                     }
                   </TouchableOpacity>
                 </View>
               </View>
-              ) : (
+            ) : (
                 <View
                   style={{ backgroundColor: 'white', paddingHorizontal: 10 }}
                 >

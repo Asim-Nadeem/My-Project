@@ -116,12 +116,12 @@ const PostDetails = (props) => {
     const b = item
     a = {
       likes: val.likes,
-      review_body: review_body == '' ? val.review_body : review_body,
-      clenliness_rating: clenliness_rating == 0 ? val.clenliness_rating : clenliness_rating,
+      review_body: review_body === '' ? val.review_body : review_body,
+      clenliness_rating: clenliness_rating === 0 ? val.clenliness_rating : clenliness_rating,
       review_id: val.review_id,
-      overall_rating: overall_rating == 0 ? val.overall_rating : overall_rating,
+      overall_rating: overall_rating === 0 ? val.overall_rating : overall_rating,
       price_rating: price_rating == 0 ? val.price_rating : price_rating,
-      quality_rating: quality_rating == 0 ? val.quality_rating : quality_rating
+      quality_rating: quality_rating === 0 ? val.quality_rating : quality_rating
     }
 
     b.review = a
@@ -132,14 +132,29 @@ const PostDetails = (props) => {
   }
 
   const updateReview = async (val, index, locID, reviewID) => {
+    const profanity = ['cake', 'tea', 'pastries']
+
+    let isValidReview = true
+
+    for (const word of profanity) {
+      if (review_body.toLowerCase().includes(word)) {
+        isValidReview = false
+      }
+    }
+
+    if (!isValidReview) {
+      ToastAndroid.show('You cannot use cake, tea or pastries in your review!', ToastAndroid.SHORT, ['UIAlertController'])
+      return
+    }
+
     const token = await AsyncStorage.getItem('token')
     setLoader(true)
     const data = {
-      overall_rating: overall_rating == 0 ? val.overall_rating : overall_rating,
-      price_rating: price_rating == 0 ? val.price_rating : price_rating,
-      quality_rating: quality_rating == 0 ? val.quality_rating : quality_rating,
-      clenliness_rating: clenliness_rating == 0 ? val.clenliness_rating : clenliness_rating,
-      review_body: review_body == '' ? val.review_body : review_body
+      overall_rating: overall_rating === 0 ? val.overall_rating : overall_rating,
+      price_rating: price_rating === 0 ? val.price_rating : price_rating,
+      quality_rating: quality_rating === 0 ? val.quality_rating : quality_rating,
+      clenliness_rating: clenliness_rating === 0 ? val.clenliness_rating : clenliness_rating,
+      review_body: review_body === '' ? val.review_body : review_body
     }
     console.log('http://10.0.2.2:3333/api/1.0.0/location/' + locID + '/review/' + reviewID, data)
     fetch('http://10.0.2.2:3333/api/1.0.0/location/' + locID + '/review/' + reviewID, {

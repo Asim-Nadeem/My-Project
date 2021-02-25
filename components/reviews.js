@@ -10,6 +10,10 @@ import { ActivityIndicator } from 'react-native-paper'
 import { useFocusEffect } from '@react-navigation/native'
 import { Picker } from '@react-native-community/picker'
 import RatingPicker from './RatingPicker'
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp
+} from 'react-native-responsive-screen'
 
 const ratingValues = [1, 2, 3, 4, 5]
 
@@ -18,22 +22,35 @@ const reviews = ({ navigation }) => {
   const [like, setLike] = useState(false)
   const [showReview, setShowReview] = useState(false)
   const [typeModalVisible, setTypeModalVisible] = useState(false)
-  const [quality_rating, setQualityRating] = useState(0)
-  const [clenliness_rating, setCleanlinessRating] = useState(0)
-  const [price_rating, setPriceRating] = useState(0)
-  const [overall_rating, setOverAllRating] = useState(0)
+
+  const [search, setSearch] = useState('')
+  const [quality_rating, setQualityRating] = useState()
+  const [clenliness_rating, setCleanlinessRating] = useState()
+  const [price_rating, setPriceRating] = useState()
+  const [overall_rating, setOverAllRating] = useState()
+
+  const [toggleFilters, setToggleFilters] = useState(false)
+  const [isSearching, setIsSearching] = useState(false)
+
   const [review_body, setReiewBody] = useState('')
   const [locID, setLocationID] = useState(0)
   const [avatarSource, setAvatarSource] = useState('')
   const [imageLoader, setImageLoader] = useState(false)
-  const [favrites, setFavorites] = useState([])
+  const [favourites, setFavourites] = useState([])
 
-  const [ratings, setRatings] = useState({ overall_rating: '', price_rating: '', quality_rating: '', cleanliness_rating: '' })
+  const [filters, setFilters] = useState({
+    overall_rating: '',
+    price_rating: '',
+    quality_rating: '',
+    clenliness_rating: '',
+    search_in: '',
+    limit: '',
+    offset: ''
+  })
 
-  const setRating = (name, rating) => {
-    setRatings(prevState => ({ ...prevState, [name]: rating }))
+  const setFilter = (name, rating) => {
+    setFilters(prevState => ({ ...prevState, [name]: rating }))
   }
-
 
   useEffect(() => {
     getUserData()
@@ -107,7 +124,7 @@ const reviews = ({ navigation }) => {
         if (liked.length > 0) {
           liked.map((item, index) => {
             response.map((data, i) => {
-              if (item.location_id == data.location_id) {
+              if (item.location_id === data.location_id) {
                 tempArray[i].favorite = true
               } else {
                 tempArray[i].favorite = false
@@ -137,8 +154,8 @@ const reviews = ({ navigation }) => {
       .then(response => {
         console.log('hhhhhhhhhhhhhhh', response)
         let favor = true
-        for (let index = 0; index < favrites.length; index++) {
-          if (item.location_id == favrites[index].location_id) {
+        for (let index = 0; index < favourites.length; index++) {
+          if (item.location_id === favourites[index].location_id) {
             favor = false
           }
         }
@@ -162,11 +179,11 @@ const reviews = ({ navigation }) => {
       .then(res => res.json())
       .then(response => {
         console.log(response)
-        setFavorites(response.favourite_locations)
+        setFavourites(response.favourite_locations)
         Posts(response.favourite_locations)
-        if (avatarSource != '') {
+        if (avatarSource !== '') {
           response.reviews.map((data, index) => {
-            if (data.review.review_body == review_Body) {
+            if (data.review.review_body === review_Body) {
               addPhoto(data.review.review_id)
               console.log('hello add photo called')
             }
@@ -179,7 +196,7 @@ const reviews = ({ navigation }) => {
   }
 
   const editLocations = (fav, item, index) => {
-    if (fav != false) {
+    if (fav !== false) {
       const a = Object.assign([], Locations)
       a[index] = {
         location_id: item.location_id,
@@ -203,6 +220,21 @@ const reviews = ({ navigation }) => {
   }
 
   const addReview = async () => {
+    const profanity = ['cake', 'tea', 'pastries']
+
+    let isValidReview = true
+
+    for (const word of profanity) {
+      if (review_body.toLowerCase().includes(word)) {
+        isValidReview = false
+      }
+    }
+
+    if (!isValidReview) {
+      ToastAndroid.show('You cannot use cake, tea or pastries in your review!', ToastAndroid.SHORT, ['UIAlertController'])
+      return
+    }
+
     const token = await AsyncStorage.getItem('token')
     const data = JSON.stringify({
       overall_rating: overall_rating,
@@ -250,24 +282,35 @@ const reviews = ({ navigation }) => {
       })
       .catch(eror => console.log(eror))
   }
-  const searchRequest = async (text) => {
+
+  const searchRequest = async () => {
+    setIsSearching(true)
+
     const token = await AsyncStorage.getItem('token')
-    let ratingsQuery = ''
-    Object.keys(ratings).forEach(rating => {
-      if (ratings[rating]) { // add only if a value is in there for a rating
-        ratingsQuery = `${ratingsQuery}&${rating}=${ratings[rating]}`
+
+    let searchQuery = `q=${search}`
+
+    for (const param of Object.keys(filters)) {
+      if (filters[param]) { // add only if a value is in there
+        searchQuery = `${searchQuery}&${param}=${filters[param]}`
       }
-    })
+    }
 
-    console.log('############## - find route - ##################')
-    console.log({ ratingsQuery })
-
-    fetch(`http://10.0.2.2:3333/api/1.0.0/find?q=${text}`, {
+    fetch(`http://10.0.2.2:3333/api/1.0.0/find?${searchQuery}`, {
       headers: {
         'Content-Type': 'application/json',
         'X-Authorization': token
       }
-    }).then(response => response.json()).then(json => console.log(json)).catch(e => console.error(e))
+    })
+      .then(response => response.json())
+      .then(json => {
+        setLocations(json)
+        setIsSearching(false)
+        console.log(json)
+      }).catch(e => {
+        console.error(e)
+        setIsSearching(false)
+      })
   }
 
   return (
@@ -290,7 +333,7 @@ const reviews = ({ navigation }) => {
               {
                 imageLoader
                   ? <ActivityIndicator size={30} color='red' />
-                  : avatarSource != ''
+                  : avatarSource !== ''
                     ? <Image style={{ height: 150, width: '100%' }} source={avatarSource} />
                     : null
               }
@@ -380,16 +423,68 @@ const reviews = ({ navigation }) => {
       <View style={{ backgroundColor: '#321637', height: '8%', width: '100%', justifyConetent: 'center', alignItems: 'center' }}>
         <Text style={styles.Header}>Coffee Shop Review</Text>
       </View>
-      <TextInput onChangeText={searchRequest} placeholder='Search' />
-
-      <RatingPicker label='Overall rating' setValue={(value) => setRating('overall_rating', value)} rating={ratings.overall_rating} />
-      <RatingPicker label='Price rating' setValue={(value) => setRating('price_rating', value)} rating={ratings.price_rating} />
-      <RatingPicker label='Quality rating' setValue={(value) => setRating('quality_rating', value)} rating={ratings.quality_rating} />
-      <RatingPicker label='Cleanliness rating' setValue={(value) => setRating('cleanliness_rating', value)} rating={ratings.cleanliness_rating} />
-
+      <TextInput onChangeText={(text) => setSearch(text)} placeholder='Search' />
+      {
+        toggleFilters &&
+          <View>
+            <RatingPicker label='Overall rating' setValue={(value) => setFilter('overall_rating', value)} rating={filters.overall_rating} />
+            <RatingPicker label='Price rating' setValue={(value) => setFilter('price_rating', value)} rating={filters.price_rating} />
+            <RatingPicker label='Quality rating' setValue={(value) => setFilter('quality_rating', value)} rating={filters.quality_rating} />
+            <RatingPicker label='Clenliness rating' setValue={(value) => setFilter('clenliness_rating', value)} rating={filters.clenliness_rating} />
+            <TextInput keyboardType='numeric' onChangeText={(num) => setFilter('limit', num)} placeholder='Limit' />
+            <TextInput keyboardType='numeric' onChangeText={(num) => setFilter('offset', num)} placeholder='Offset' />
+          </View>
+      }
+      <View style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row' }}>
+        <TouchableOpacity
+          disabled={isSearching}
+          style={{
+            backgroundColor: 'blue',
+            paddingVertical: hp(1.5),
+            width: wp(30),
+            borderRadius: 5
+          }}
+          onPress={() => searchRequest()}
+        >
+          {
+                  isSearching
+                    ? <ActivityIndicator color='white' size={20} />
+                    : <Text
+                        style={{
+                          fontSize: 16,
+                          color: 'white',
+                          alignSelf: 'center'
+                        }}
+                      >
+                      Search
+                    </Text>
+              }
+        </TouchableOpacity>
+        <TouchableOpacity
+          disabled={isSearching}
+          style={{
+            backgroundColor: 'grey',
+            paddingVertical: hp(1.5),
+            width: wp(30),
+            borderRadius: 5
+          }}
+          onPress={() => setToggleFilters(!toggleFilters)}
+        >
+          <Text
+            style={{
+              fontSize: 16,
+              color: 'white',
+              alignSelf: 'center'
+            }}
+          >
+            {toggleFilters ? 'Close Filters' : 'Show Filters'}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       <FlatList
         data={Locations}
+        refreshing={isSearching}
         renderItem={({ item, index }) => (
           <TouchableOpacity
             onPress={() => navigation.navigate('PostDetails', { locID: item.location_id })}

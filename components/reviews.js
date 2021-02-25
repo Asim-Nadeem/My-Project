@@ -8,6 +8,10 @@ import { launchCamera } from 'react-native-image-picker'
 import { ScrollView } from 'react-native-gesture-handler'
 import { ActivityIndicator } from 'react-native-paper'
 import { useFocusEffect } from '@react-navigation/native'
+import { Picker } from '@react-native-community/picker'
+import RatingPicker from './RatingPicker'
+
+const ratingValues = [1, 2, 3, 4, 5]
 
 const reviews = ({ navigation }) => {
   const [Locations, setLocations] = useState([])
@@ -16,13 +20,20 @@ const reviews = ({ navigation }) => {
   const [typeModalVisible, setTypeModalVisible] = useState(false)
   const [quality_rating, setQualityRating] = useState(0)
   const [clenliness_rating, setCleanlinessRating] = useState(0)
-  const [price_rating, setProceRating] = useState(0)
+  const [price_rating, setPriceRating] = useState(0)
   const [overall_rating, setOverAllRating] = useState(0)
   const [review_body, setReiewBody] = useState('')
   const [locID, setLocationID] = useState(0)
   const [avatarSource, setAvatarSource] = useState('')
   const [imageLoader, setImageLoader] = useState(false)
   const [favrites, setFavorites] = useState([])
+
+  const [ratings, setRatings] = useState({ overall_rating: '', price_rating: '', quality_rating: '', cleanliness_rating: '' })
+
+  const setRating = (name, rating) => {
+    setRatings(prevState => ({ ...prevState, [name]: rating }))
+  }
+
 
   useEffect(() => {
     getUserData()
@@ -68,6 +79,7 @@ const reviews = ({ navigation }) => {
   }
   const priceRating = (rating) => {
     console.log('Rating is: ' + rating)
+    setPriceRating(rating)
   }
   const qualityRating = (rating) => {
     console.log('Quality Rating is: ' + rating)
@@ -238,6 +250,25 @@ const reviews = ({ navigation }) => {
       })
       .catch(eror => console.log(eror))
   }
+  const searchRequest = async (text) => {
+    const token = await AsyncStorage.getItem('token')
+    let ratingsQuery = ''
+    Object.keys(ratings).forEach(rating => {
+      if (ratings[rating]) { // add only if a value is in there for a rating
+        ratingsQuery = `${ratingsQuery}&${rating}=${ratings[rating]}`
+      }
+    })
+
+    console.log('############## - find route - ##################')
+    console.log({ ratingsQuery })
+
+    fetch(`http://10.0.2.2:3333/api/1.0.0/find?q=${text}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Authorization': token
+      }
+    }).then(response => response.json()).then(json => console.log(json)).catch(e => console.error(e))
+  }
 
   return (
     <View style={styles.MainView}>
@@ -257,12 +288,12 @@ const reviews = ({ navigation }) => {
           <ScrollView>
             <View style={{ paddingHorizontal: 15 }}>
               {
-              imageLoader
-                ? <ActivityIndicator size={30} color='red' />
-                : avatarSource != ''
-                  ? <Image style={{ height: 150, width: '100%' }} source={avatarSource} />
-                  : null
-            }
+                imageLoader
+                  ? <ActivityIndicator size={30} color='red' />
+                  : avatarSource != ''
+                    ? <Image style={{ height: 150, width: '100%' }} source={avatarSource} />
+                    : null
+              }
               <View style={{ paddingTop: 15 }}>
                 <Text style={{ fontSize: 15, fontWeight: 'bold' }}>Overall Rating</Text>
                 <Rating
@@ -349,6 +380,14 @@ const reviews = ({ navigation }) => {
       <View style={{ backgroundColor: '#321637', height: '8%', width: '100%', justifyConetent: 'center', alignItems: 'center' }}>
         <Text style={styles.Header}>Coffee Shop Review</Text>
       </View>
+      <TextInput onChangeText={searchRequest} placeholder='Search' />
+
+      <RatingPicker label='Overall rating' setValue={(value) => setRating('overall_rating', value)} rating={ratings.overall_rating} />
+      <RatingPicker label='Price rating' setValue={(value) => setRating('price_rating', value)} rating={ratings.price_rating} />
+      <RatingPicker label='Quality rating' setValue={(value) => setRating('quality_rating', value)} rating={ratings.quality_rating} />
+      <RatingPicker label='Cleanliness rating' setValue={(value) => setRating('cleanliness_rating', value)} rating={ratings.cleanliness_rating} />
+
+
       <FlatList
         data={Locations}
         renderItem={({ item, index }) => (
